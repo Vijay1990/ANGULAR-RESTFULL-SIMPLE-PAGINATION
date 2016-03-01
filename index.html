@@ -1,0 +1,81 @@
+<html>
+<head>
+	<title> Custom Directive </title>
+	<meta name="viewport" content="width=device-width, initial-scale=1">
+	<link rel="stylesheet" type="text/css" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.6/css/bootstrap.min.css">		
+</head>
+<body ng-app="PaginationApp">
+	<section ng-controller="PageinationCtrl">
+		<pagination total='100' count='10'></pagination>		
+	</section>
+</body>
+<script src="https://ajax.googleapis.com/ajax/libs/angularjs/1.5.0/angular.min.js"></script>
+<script type="text/javascript">
+	(function(){
+		var app = angular.module('PaginationApp',[]);
+		app.controller('PageinationCtrl',['$scope','$http','$q',function($scope,$http,$q){
+			this.getData = function(val){
+			var arr = Array.prototype.slice.call(arguments);				
+				$http.get('http://www.filltext.com/?rows='+val+'&fname={firstName}&id={index}&lname={lastName}')
+				.success(function(datas){
+					if(arr[1]){
+						$scope.names = datas.splice((arr[1]-1)*arr[2]);					
+					}
+					else{
+						$scope.names = datas;					
+					}
+				});				
+			};
+		}]);
+		app.directive('pagination',function($q){
+			return{
+				restrict:'E',
+				scope:{
+					count:'@',
+					total:'@'
+				},
+				controller:'PageinationCtrl',				
+				link:function(scope,element,attribute,Ctrl){
+					scope.totalVal = attribute.total;					
+					scope.Splitval = attribute.count;					
+					Ctrl.getData(scope.Splitval);
+					var modval = Math.round(attribute.total/attribute.count);
+					scope.paginationArr = Array.from(Array(modval).keys());
+					scope.paginationClick = function(val){
+						Ctrl.getData(val*scope.Splitval,val,scope.Splitval);
+					}
+				},
+				replace:true,				
+				//templateUrl:'./js/partials/pagination-template.html'
+				template:'<div class="container">'+
+							'<table class="table table-striped table-bordered">'+
+								'<thead>'+
+									'<tr>'+
+										'<td>S.no</td>'+
+										'<td>First Name</td>'+
+										'<td>Last Name</td>'+
+									'</tr>'+
+								'</thead>'+
+								'<tbody>'+
+									'<tr ng-repeat="name in names">'+
+										'<td>{{name.id}}</td>'+
+										'<td>{{name.fname}}</td>'+
+										'<td>{{name.lname}}</td>'+
+									'</tr>'+	
+								'</tbody>'+
+							'</table>'+
+							'<div>'+
+								'<table>'+
+									'<tr>'+
+										'<td ng-repeat="page in paginationArr">'+
+										'<button style="margin: 0 5px;" ng-click="paginationClick($index+1)" class="btn btn-success">{{$index+1}}</button>'+
+										'</td>'+
+									'</tr>'+
+								'</table>'+
+							'</div>'+
+						'</div>'
+			}
+		});
+	})();
+</script>
+</html>
